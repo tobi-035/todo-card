@@ -4,7 +4,7 @@ A single-file, zero-dependency task card UI built with semantic HTML, CSS, and v
 
 ## Live URL
 
-> `https://<your-netlify-or-pages-url>`
+> `https://tobi-035.github.io/todo-card`
 
 ---
 
