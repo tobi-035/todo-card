@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0b0c0f;
+      --surface:   #13151a;
+      --surface2:  #1c1f27;
+      --border:    #252830;
+      --border2:   #2e3240;
+      --text:      #e8eaf0;
+      --muted:     #6b7280;
+      --muted2:    #9ca3af;
+      --accent:    #f0c05a;
+      --accent2:   #e8a020;
+      --green:     #34d399;
+      --green-bg:  rgba(52,211,153,0.08);
+      --red:       #f87171;
+      --red-bg:    rgba(248,113,113,0.08);
+      --blue:      #60a5fa;
+      --blue-bg:   rgba(96,165,250,0.08);
+      --purple:    #a78bfa;
+      --purple-bg: rgba(167,139,250,0.08);
+      --orange:    #fb923c;
+      --orange-bg: rgba(251,146,60,0.08);
+      --radius:    14px;
+      --radius-sm: 8px;
+      --mono: 'DM Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--sans);
+      padding: 2rem;
+    }
+
+    /* subtle grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    /* Card */
+    .card {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03),
+        0 20px 60px rgba(0,0,0,0.6),
+        0 4px 16px rgba(0,0,0,0.4);
+      animation: rise 0.5s cubic-bezier(0.22,1,0.36,1) both;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 0 1px rgba(240,192,90,0.12),
+        0 24px 70px rgba(0,0,0,0.65),
+        0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    .card.completed {
+      opacity: 0.6;
+    }
+
+    .card.completed .card__title {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+
+    /* accent line at top */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 28px; right: 28px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      border-radius: 0 0 4px 4px;
+      opacity: 0.7;
+    }
+
+    /* Top row */
+    .card__top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card__top-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Checkbox */
+    .checkbox-wrap {
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .checkbox-wrap input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border2);
+      border-radius: 6px;
+      background: var(--surface2);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s ease;
+      display: block;
+    }
+
+    .checkbox-wrap input[type="checkbox"]:hover {
+      border-color: var(--accent);
+      background: rgba(240,192,90,0.06);
+    }
+
+    .checkbox-wrap input[type="checkbox"]:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .checkbox-wrap input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 6px;
+      width: 5px; height: 9px;
+      border: 2px solid #0b0c0f;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .checkbox-wrap input[type="checkbox"]:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Title & description */
+    .card__body { flex: 1; min-width: 0; }
+
+    .card__title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+      transition: color 0.2s, text-decoration 0.2s;
+    }
+
+    .card__description {
+      margin-top: 6px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 300;
+      color: var(--muted2);
+      line-height: 1.6;
+    }
+
+    /* Actions (edit/delete) */
+    .card__actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      transition: all 0.15s ease;
+    }
+
+    .btn-icon:hover { border-color: var(--border2); color: var(--text); background: var(--border); }
+    .btn-icon.delete:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+    .btn-icon svg { width: 14px; height: 14px; }
+
+    /* Divider */
+    .card__divider {
+      height: 1px;
+      background: var(--border);
+      margin: 18px 0;
+    }
+
+    /* Meta row */
+    .card__meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .badge--high    { color: var(--red);    background: var(--red-bg);    border-color: rgba(248,113,113,0.2); }
+    .badge--medium  { color: var(--orange); background: var(--orange-bg); border-color: rgba(251,146,60,0.2); }
+    .badge--low     { color: var(--green);  background: var(--green-bg);  border-color: rgba(52,211,153,0.2); }
+
+    .badge--dot::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      display: inline-block;
+    }
+
+    /* Status */
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: var(--muted2);
+      letter-spacing: 0.02em;
+    }
+
+    .status__dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status--in-progress .status__dot { background: var(--accent); box-shadow: 0 0 6px var(--accent2); animation: pulse 2s infinite; }
+    .status--todo        .status__dot { background: var(--blue); }
+    .status--done        .status__dot { background: var(--green); }
+    .status--blocked     .status__dot { background: var(--red); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.6; transform: scale(0.85); }
+    }
+
+    /* Dates row */
+    .card__dates {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .date-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .date-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .date-value {
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .date-value.overdue { color: var(--red); }
+    .date-value.soon    { color: var(--orange); }
+    .date-value.fine    { color: var(--green); }
+
+    .time-remaining {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    .time-remaining.overdue { color: var(--red);    background: var(--red-bg); }
+    .time-remaining.soon    { color: var(--orange); background: var(--orange-bg); }
+    .time-remaining.fine    { color: var(--green);  background: var(--green-bg); }
+    .time-remaining.done    { color: var(--muted);  background: var(--surface2); }
+
+    /* Tags */
+    .card__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      list-style: none;
+      padding: 0;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 400;
+      color: var(--muted2);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 3px 9px;
+      transition: all 0.15s ease;
+      cursor: default;
+    }
+
+    .tag:hover {
+      color: var(--text);
+      border-color: var(--border2);
+      background: var(--border);
+    }
+
+    .tag::before { content: '#'; opacity: 0.45; margin-right: 1px; }
+  </style>
+</head>
+<body>
+
+  <article
+    data-testid="test-todo-card"
+    class="card"
+    role="region"
+    aria-label="Todo task card"
+  >
+
+    <!-- Top: checkbox + title/desc + actions -->
+    <div class="card__top">
+      <div class="card__top-left">
+
+        <div class="checkbox-wrap">
+          <label for="todo-complete" class="sr-only">Mark task as complete</label>
+          <input
+            type="checkbox"
+            id="todo-complete"
+            data-testid="test-todo-complete-toggle"
+            aria-label="Mark task as complete"
+          />
+        </div>
+
+        <div class="card__body">
+          <h2 class="card__title" data-testid="test-todo-title">
+            Redesign onboarding flow for mobile
+          </h2>
+          <p class="card__description" data-testid="test-todo-description">
+            Audit current drop-off points, wireframe new step sequence, and hand off final screens to engineering by end of sprint.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="card__actions">
+        <button
+          class="btn-icon"
+          data-testid="test-todo-edit-button"
+          aria-label="Edit task"
+          title="Edit"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button
+          class="btn-icon delete"
+          data-testid="test-todo-delete-button"
+          aria-label="Delete task"
+          title="Delete"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="card__divider"></div>
+
+    <!-- Priority + Status -->
+    <div class="card__meta">
+      <span
+        class="badge badge--high badge--dot"
+        data-testid="test-todo-priority"
+        aria-label="Priority: High"
+      >High</span>
+
+      <span
+        class="status status--in-progress"
+        data-testid="test-todo-status"
+        aria-label="Status: In Progress"
+      >
+        <span class="status__dot"></span>
+        In Progress
+      </span>
+    </div>
+
+    <!-- Due date + time remaining -->
+    <div class="card__dates">
+      <div class="date-block">
+        <span class="date-label">Due date</span>
+        <time
+          class="date-value"
+          data-testid="test-todo-due-date"
+          id="due-date-display"
+          datetime=""
+        >—</time>
+      </div>
+
+      <time
+        class="time-remaining"
+        data-testid="test-todo-time-remaining"
+        id="time-remaining-display"
+        datetime=""
+        aria-live="polite"
+      >—</time>
+    </div>
+
+    <div class="card__divider"></div>
+
+    <!-- Tags -->
+    <ul
+      class="card__tags"
+      data-testid="test-todo-tags"
+      role="list"
+      aria-label="Task categories"
+    >
+      <li class="tag" data-testid="test-todo-tag-design">design</li>
+      <li class="tag" data-testid="test-todo-tag-mobile">mobile</li>
+      <li class="tag" data-testid="test-todo-tag-ux">ux</li>
+      <li class="tag" data-testid="test-todo-tag-sprint">sprint</li>
+    </ul>
+
+  </article>
+
+  <style>
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+
+  <script>
+    // Due date config 
+    const DUE = new Date('2026-04-12T17:00:00'); 
+
+    // Formatters 
+    function formatDueDate(date) {
+      return 'Due ' + date.toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric'
+      });
+    }
+
+    function formatTimeRemaining(due) {
+      const now   = new Date();
+      const diffMs = due - now;
+      const abs   = Math.abs(diffMs);
+      const past  = diffMs < 0;
+
+      const mins  = Math.floor(abs / 60000);
+      const hours = Math.floor(abs / 3600000);
+      const days  = Math.floor(abs / 86400000);
+
+      let label, cls;
+
+      if (mins < 1) {
+        label = past ? 'Just overdue' : 'Due now';
+        cls   = 'overdue';
+      } else if (hours < 1) {
+        label = past
+          ? `Overdue by ${mins}m`
+          : `Due in ${mins}m`;
+        cls = past ? 'overdue' : 'soon';
+      } else if (days < 1) {
+        label = past
+          ? `Overdue by ${hours}h`
+          : `Due in ${hours}h`;
+        cls = past ? 'overdue' : 'soon';
+      } else {
+        label = past
+          ? `Overdue by ${days} day${days !== 1 ? 's' : ''}`
+          : `Due in ${days} day${days !== 1 ? 's' : ''}`;
+        cls = past ? 'overdue' : (days <= 2 ? 'soon' : 'fine');
+      }
+
+      return { label, cls };
+    }
+
+    // DOM refs 
+    const dueDateEl        = document.getElementById('due-date-display');
+    const timeRemainingEl  = document.getElementById('time-remaining-display');
+    const checkbox         = document.querySelector('[data-testid="test-todo-complete-toggle"]');
+    const card             = document.querySelector('[data-testid="test-todo-card"]');
+
+    // Update function
+    function update() {
+      // Due date display
+      const formatted = formatDueDate(DUE);
+      dueDateEl.textContent = formatted;
+      dueDateEl.setAttribute('datetime', DUE.toISOString());
+
+      // Time remaining
+      if (checkbox.checked) {
+        timeRemainingEl.textContent = 'Completed';
+        timeRemainingEl.className   = 'time-remaining done';
+        timeRemainingEl.setAttribute('datetime', '');
+        return;
+      }
+
+      const { label, cls } = formatTimeRemaining(DUE);
+      timeRemainingEl.textContent = label;
+      timeRemainingEl.className   = 'time-remaining ' + cls;
+      timeRemainingEl.setAttribute('datetime', DUE.toISOString());
+
+      // Also colour the due date text
+      dueDateEl.className = 'date-value ' + cls;
+    }
+
+    // Checkbox toggle
+    checkbox.addEventListener('change', () => {
+      card.classList.toggle('completed', checkbox.checked);
+      update();
+    });
+
+    // Init + interval (every 30s) 
+    update();
+    setInterval(update, 30000);
+  </script>
+
+</body>
+</html>
