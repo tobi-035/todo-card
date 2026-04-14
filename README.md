@@ -1,6 +1,6 @@
-# Todo Item Card
+# Todo Item Card — Stage 1
 
-A single-file, zero-dependency task card UI built with semantic HTML, CSS, and vanilla JavaScript.
+An interactive, stateful todo card built with semantic HTML, CSS, and vanilla JavaScript. No frameworks. No dependencies for the card itself.
 
 ## Live URL
 
@@ -10,65 +10,109 @@ A single-file, zero-dependency task card UI built with semantic HTML, CSS, and v
 
 ## How to Run Locally
 
-No install step needed. Just open the file:
-
 ```bash
-# Option 1 — open directly in browser
+# Open directly — no server needed
 open index.html
 
-# Option 2 — serve with any static server
+# Or serve with a static server
 npx serve .
 # → http://localhost:3000
 ```
 
 ---
 
-## What It Does
+## How to Run the Tests
 
-- Displays a task card with title, description, priority badge, status indicator, due date, time remaining, checkbox, and tags
-- Due date and time remaining update automatically every 30 seconds
-- Time remaining is human-readable: `Due in 3 days`, `Overdue by 2 hours`, `Due in 45m`
-- Checking the checkbox marks the card as complete and freezes the time display to `Completed`
-- All interactive elements (edit, delete, checkbox) are keyboard accessible
+```bash
+npm install           # installs Cypress (one time only)
+npm test              # run all tests headlessly
+npm run test:open     # open the Cypress visual runner
+```
+
+Tests run against the live GitHub Pages URL by default. To run locally, edit `cypress.config.js` and change `baseUrl` to `http://localhost:3000`.
+
+---
+
+## What Changed from Stage 0
+
+| Feature | Stage 0 | Stage 1 |
+|---|---|---|
+| Edit mode | Button existed, no logic | Full edit form with save/cancel |
+| Status | Display only | Segmented control — Pending / In Progress / Done |
+| Priority | Badge only | Badge + glowing dot indicator + left border accent |
+| Description | Always fully shown | Collapsible if > 100 chars |
+| Overdue | Time remaining coloured red | Explicit flashing Overdue badge |
+| Checkbox ↔ status | Checkbox toggled done | Full two-way sync with status control |
+| Time format | Hours only | Granular — minutes, hours, days |
+| Focus management | None | Focus trapped in edit form, returned to Edit on close |
 
 ---
 
 ## All `data-testid` Attributes
 
-| Element           | `data-testid`                    |
-|-------------------|----------------------------------|
-| Card container    | `test-todo-card`                 |
-| Title             | `test-todo-title`                |
-| Description       | `test-todo-description`          |
-| Priority badge    | `test-todo-priority`             |
-| Due date          | `test-todo-due-date`             |
-| Time remaining    | `test-todo-time-remaining`       |
-| Status indicator  | `test-todo-status`               |
-| Checkbox          | `test-todo-complete-toggle`      |
-| Tags list         | `test-todo-tags`                 |
-| Tag (each)        | `test-todo-tag-{name}`           |
-| Edit button       | `test-todo-edit-button`          |
-| Delete button     | `test-todo-delete-button`        |
+### Stage 0 (still present)
+| Element | `data-testid` |
+|---|---|
+| Card | `test-todo-card` |
+| Title | `test-todo-title` |
+| Description | `test-todo-description` |
+| Priority badge | `test-todo-priority` |
+| Due date | `test-todo-due-date` |
+| Time remaining | `test-todo-time-remaining` |
+| Status display | `test-todo-status` |
+| Checkbox | `test-todo-complete-toggle` |
+| Tags list | `test-todo-tags` |
+| Tags | `test-todo-tag-{design,mobile,ux,sprint}` |
+| Edit button | `test-todo-edit-button` |
+| Delete button | `test-todo-delete-button` |
+
+### Stage 1 (new)
+| Element | `data-testid` |
+|---|---|
+| Edit form | `test-todo-edit-form` |
+| Title input | `test-todo-edit-title-input` |
+| Description textarea | `test-todo-edit-description-input` |
+| Priority select | `test-todo-edit-priority-select` |
+| Due date input | `test-todo-edit-due-date-input` |
+| Save button | `test-todo-save-button` |
+| Cancel button | `test-todo-cancel-button` |
+| Status control | `test-todo-status-control` |
+| Priority indicator | `test-todo-priority-indicator` |
+| Expand toggle | `test-todo-expand-toggle` |
+| Collapsible section | `test-todo-collapsible-section` |
+| Overdue indicator | `test-todo-overdue-indicator` |
 
 ---
 
-## Decisions Made
+## Design Decisions
 
-**Single file** — the brief is a UI component, not an app. One `index.html` is the simplest possible deliverable that satisfies every requirement.
+**State object** — all card data lives in a single `state` object. Every render function reads from it. This makes save/cancel trivial: snapshot on open, restore on cancel.
 
-**Semantic HTML** — card is an `<article>`, title is `<h2>`, dates use `<time datetime="...">`, tags are a `<ul role="list">`, buttons are real `<button>` elements, checkbox is a real `<input type="checkbox">` with an associated `<label>`.
+**Two-way status sync** — checkbox and the segmented status control stay in sync at all times. Checking the checkbox sets status to Done. Setting status to Done checks the checkbox. Unchecking reverts to Pending.
 
-**Zero dependencies** — no React, no build step, no `npm install`. Opens directly in a browser. Deploys to GitHub Pages, Netlify, or Vercel with no configuration.
+**Collapse threshold** — descriptions longer than 100 characters are truncated with a Show more toggle. The threshold is a named constant at the top of the script so it's easy to adjust.
 
-**30-second interval** — the spec says update every 30–60 seconds. 30 seconds chosen so overdue states become visible quickly during demos.
+**Focus trap** — Tab cycles through the edit form's focusable elements without escaping. Escape cancels. Focus returns to the Edit button when the form closes.
 
-**`datetime` attribute** — both `<time>` elements carry a machine-readable ISO 8601 `datetime` attribute alongside the human-readable label, satisfying accessibility tooling and the HTML spec.
+**Overdue indicator** — separate from the time remaining badge. The `test-todo-overdue-indicator` element always exists in the DOM (for the test suite) but is only visually shown when the task is past due and not done.
 
 ---
 
-## Trade-offs
+## Known Limitations
 
-- **Static data** — the task content and due date are hardcoded. In a real app they'd come from props or an API. The due date is easy to change: edit the `DUE` constant at the top of the `<script>` block.
-- **No persistence** — checkbox state resets on page refresh. Adding `localStorage` would be one extra line but was out of scope.
-- **No edit/delete logic** — the buttons exist with correct `data-testid` and `aria-label` attributes for the test suite, but clicking them does nothing. Wiring them up requires an app layer that wasn't part of the brief.
-"# todo-card" 
+- Delete button has no logic — it exists for the test suite but does not remove the card
+- Tags are not editable in Stage 1
+- No persistence — state resets on page refresh
+- Due date defaults to a hardcoded value; change the `state.due` line in the script to adjust it
+
+---
+
+## Accessibility Notes
+
+- Edit form traps focus (Tab / Shift+Tab cycle within the form)
+- Escape closes the edit form from any focused element inside it
+- All interactive elements have `aria-label` or an associated `<label>`
+- Status control has `role="group"` and each button has `aria-pressed`
+- Expand toggle has `aria-expanded` and `aria-controls`
+- Time remaining and overdue indicator have `aria-live` for screen reader announcements
+- Checkbox has both a visually hidden `<label>` and an `aria-label`
